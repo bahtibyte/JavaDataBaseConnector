@@ -1,5 +1,6 @@
 package oop;
 
+import javax.security.auth.login.LoginContext;
 import java.util.ArrayList;
 
 public class Login {
@@ -90,5 +91,15 @@ public class Login {
                 ", password='" + password + '\'' +
                 ", databases=" + databases +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (!(o instanceof Login)){
+            return false;
+        }
+        Login l = (Login) o;
+        return l.address.equals(address) && l.nickname.equals(nickname) && l.port.equals(port) && l.username.equals(username)
+                && l.password.equals(password);
     }
 }

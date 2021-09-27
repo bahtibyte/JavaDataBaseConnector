@@ -1,5 +1,7 @@
-package testing;
+package jdbc;
 
+import com.microsoft.sqlserver.jdbc.SQLServerException;
+import jdbc.Driver;
 import net.miginfocom.swing.MigLayout;
 import oop.Login;
 import org.json.simple.JSONArray;
@@ -8,18 +10,23 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class Validation implements ActionListener {
+public class Validation implements ActionListener, KeyListener {
 
     private JFrame frame;
+    private JPanel panel;
 
-    private JLabel nicknameLabel, serverLabel, portLabel, userLabel, passwordLabel, databasesLabel;
+    private JLabel messageLabel, nicknameLabel, serverLabel, portLabel, userLabel, passwordLabel, databasesLabel;
     private JTextField nicknameField, serverField, portField, userField, passwordField;
     private JTextArea databasesArea;
 
@@ -163,55 +170,59 @@ public class Validation implements ActionListener {
     }
 
     private void initialize() {
-        frame = new JFrame("Connect to Server");
+        frame = new JFrame("JDBC");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setPreferredSize(new Dimension(300, 300));
         frame.setResizable(true);
 
-        frame.setLayout(new MigLayout("ins 15"));
+
+        panel = new JPanel(new MigLayout("ins 15"));
+
+        messageLabel = new JLabel("Connect to Server");
+        panel.add(messageLabel, "span, center, gapbottom 15");
 
         nicknameLabel = new JLabel("Server Nickname:");
-        frame.add(nicknameLabel);
+        panel.add(nicknameLabel);
         nicknameField = new JTextField();
-        frame.add(nicknameField, "pushx, growx, wrap");
+        panel.add(nicknameField, "pushx, growx, wrap");
 
         serverLabel = new JLabel("Server Address:");
-        frame.add(serverLabel);
+        panel.add(serverLabel);
         serverField = new JTextField();
-        frame.add(serverField, "pushx, growx, wrap");
+        panel.add(serverField, "pushx, growx, wrap");
 
         portLabel = new JLabel("Server Port:");
-        frame.add(portLabel);
+        panel.add(portLabel);
         portField = new JTextField();
-        frame.add(portField, "pushx, growx, wrap");
+        panel.add(portField, "pushx, growx, wrap");
 
         userLabel = new JLabel("Username:");
-        frame.add(userLabel);
+        panel.add(userLabel);
         userField = new JTextField();
-        frame.add(userField, "pushx, growx, wrap");
+        panel.add(userField, "pushx, growx, wrap");
 
         passwordLabel = new JLabel("Password");
-        frame.add(passwordLabel);
+        panel.add(passwordLabel);
         passwordField = new JPasswordField();
-        frame.add(passwordField, "growx, wrap");
+        panel.add(passwordField, "growx, wrap");
 
         databasesLabel = new JLabel("Databases:");
-        frame.add(databasesLabel);
+        panel.add(databasesLabel);
         databasesArea = new JTextArea();
+        databasesArea.addKeyListener(this);
         (databasesArea).setBorder(new JTextField().getBorder());
-        frame.add(databasesArea, "pushx, growx, wrap");
+        panel.add(databasesArea, "pushx, growx, wrap");
 
         connect = new JButton("Connect");
         connect.addActionListener(this);
-        frame.add(connect);
+        panel.add(connect);
 
         save = new JButton("Save");
         save.addActionListener(this);
-        frame.add(save, "span 2, split 2, right, gaptop 15");
+        panel.add(save, "span 2, split 2, right, gaptop 15");
 
         delete = new JButton("Delete");
         delete.addActionListener(this);
-        frame.add(delete);
+        panel.add(delete);
 
         menuBar = new JMenuBar();
         menu = new JMenu("Saved");
@@ -221,6 +232,8 @@ public class Validation implements ActionListener {
 
         menuBar.add(menu);
         frame.setJMenuBar(menuBar);
+
+        frame.getContentPane().add(panel);
 
         frame.pack();
         frame.setLocationRelativeTo(null);
@@ -248,10 +261,17 @@ public class Validation implements ActionListener {
         String names = login.getDatabases().toString();
         String dbs = names.substring(1, names.length()-1).replaceAll(", ", "\n");
         databasesArea.setText(dbs);
+
+        this.frame.pack();
     }
 
     private void saveLogin() {
         String nickname = nicknameField.getText();
+
+        if (nickname.length() == 0) {
+            return;
+        }
+
         String address = serverField.getText();
         String port = portField.getText();
         String username = userField.getText();
@@ -292,6 +312,7 @@ public class Validation implements ActionListener {
         }
         loadLogin(Login.EMPTY);
         refreshLogins();
+        this.frame.pack();
     }
 
     private Login getMatchingName(String nickname){
@@ -308,7 +329,101 @@ public class Validation implements ActionListener {
         Login matching = getMatchingName(nickname);
         if (matching != null) {
             loadLogin(matching);
+            this.messageLabel.setText("Connect to server");
+            this.frame.pack();
         }
+    }
+
+    private void startConnection() {
+
+        String nickname = nicknameField.getText();
+        String address = serverField.getText();
+        String port = portField.getText();
+        String username = userField.getText();
+        String password = passwordField.getText();
+        ArrayList<String> dbs = new ArrayList<String>();
+        for (String db : databasesArea.getText().split("\n")){
+            dbs.add(db);
+        }
+
+        Login current = new Login(nickname, address, port, username, password, dbs);
+        Login match = getMatchingName(nickname);
+
+        if (address.length() == 0 || port.length() == 0 || username.length() == 0 || password.length() == 0 ||
+                databasesArea.getText().length() == 0) {
+            messageLabel.setText("1 or more fields are empty");
+            return;
+        }
+
+        String connectionUrl = "jdbc:sqlserver://"+address+":"+port;
+
+        Connection con = null;
+
+        final JOptionPane jop = new JOptionPane();
+        jop.setMessageType(JOptionPane.PLAIN_MESSAGE);
+        jop.setMessage("Connecting to the server, please wait");
+        final JDialog[] dialog = {null};
+
+        new Thread(new Runnable() {
+            public void run() {
+                frame.setVisible(false);
+                dialog[0] = jop.createDialog(null, "Connecting...");
+                dialog[0].setVisible(true);
+            }
+
+        }).start();
+
+        try {
+            System.out.println("Starting connection to "+connectionUrl);
+            con = DriverManager.getConnection(connectionUrl, username, password);
+            boolean reachable = con.isValid(3);
+
+            if (reachable) {
+                System.out.println("Connected Successfully");
+                dialog[0].dispose();
+
+                // If the current info is what we have on file, then update last login
+                if (current.equals(match)) {
+                    lastLogin = current;
+                    writeLogins();
+                }
+
+                connectSuccessful(current);
+            }
+
+        } catch (SQLServerException se) {
+            System.out.println("Failed Login");
+            String error = se.toString();
+            if (error.contains("The TCP/IP connection to the host ")) {
+                messageLabel.setText("ERROR: Unable to connect to the server");
+            }else if (error.contains("Login failed for user ")) {
+                messageLabel.setText("ERROR: Invalid login details");
+            }else if (error.contains("The port number ")) {
+                messageLabel.setText("ERROR: The port number is invalid");
+            }else{
+                messageLabel.setText("Unable to connect, unknown reason");
+            }
+            se.printStackTrace();
+            dialog[0].dispose();
+            frame.setVisible(true);
+        } catch (SQLException e){
+            e.printStackTrace();
+            dialog[0].dispose();
+            frame.setVisible(true);
+        } finally {
+            try {
+                if (con != null) {
+                    System.out.println("Closing initial connection attempt");
+                    con.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void connectSuccessful(Login current) {
+        Driver.connect(current);
     }
 
     @Override
@@ -326,7 +441,7 @@ public class Validation implements ActionListener {
             }
 
             if (source.equals(connect)) {
-
+                this.startConnection();
             }
         }
 
@@ -339,7 +454,20 @@ public class Validation implements ActionListener {
         }
     }
 
-    public static void main(String[] args){
-        new Validation();
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if (e.getSource().equals(databasesArea)) {
+            frame.pack();
+        }
     }
 }

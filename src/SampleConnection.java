@@ -1,3 +1,6 @@
+import com.microsoft.sqlserver.jdbc.SQLServerException;
+
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -9,23 +12,54 @@ public class SampleConnection {
     public static void main(String args[]) {
 
 
-        String connectionUrl = "";
+        String connectionUrl = "jdbc:sqlserver://192.168.1.156:12002";
+
+        Connection con = null;
+
+        final JOptionPane jop = new JOptionPane();
+        jop.setMessageType(JOptionPane.WARNING_MESSAGE);
+        jop.setMessage("Connecting to the server, please wait");
+        final JDialog[] dialog = {null};
+
+        new Thread(new Runnable() {
+            public void run() {
+                dialog[0] = jop.createDialog(null, "Connecting...");
+                dialog[0].setVisible(true);
+            }
+
+        }).start();
+
 
         try {
 
-            Connection con = DriverManager.getConnection(connectionUrl);
-            Statement stmt = con.createStatement();
+            System.out.println("Starting");
 
-            String SQL = "SELECT TOP 20 * FROM Person.Person";
+            con = DriverManager.getConnection(connectionUrl, "SA", "PH@123456789");
 
-            ResultSet rs = stmt.executeQuery(SQL);
-            int i = 1;
-            while (rs.next()) {
-                System.out.println(i++ +": "+rs.getString("FirstName") + " " + rs.getString("LastName"));
+            boolean reachable = con.isValid(3);
+
+            if (reachable) {
+                // Connected Successfully
+                System.out.println("Finished");
+                dialog[0].dispose();
+
             }
 
-        }catch (SQLException e){
+        } catch (SQLServerException se) {
+            System.out.println("Failed Login");
+            se.printStackTrace();
+            dialog[0].dispose();
+        } catch (SQLException e){
             e.printStackTrace();
+            dialog[0].dispose();
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
 
 
