@@ -19,7 +19,8 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
 
     private JMenuBar menuBar;
     private JMenu mainMenu, fileMenu;
-    private JMenuItem connectItem, openQueryItem, saveQueryItem;
+    private JMenuItem connectItem, refreshItem;
+    private JMenuItem openQueryItem, saveQueryItem;
 
     private JTree tree;
 
@@ -57,6 +58,7 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
         frame.getContentPane().add(splitPane);
 
         frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 
@@ -64,7 +66,6 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
         frame = new JFrame(TITLE);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        frame.setLocationRelativeTo(null);
         frame.setResizable(true);
     }
 
@@ -73,7 +74,9 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
 
         mainMenu = new JMenu("Menu");
         connectItem = new JMenuItem("Connection");
+        refreshItem = new JMenuItem("Refresh");
         mainMenu.add(connectItem);
+        mainMenu.add(refreshItem);
 
         fileMenu = new JMenu("File");
         openQueryItem = new JMenuItem("Open Query");
@@ -114,6 +117,14 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
         //original Tutorial
         DefaultMutableTreeNode t2a = new DefaultMutableTreeNode("Table 2");
         db2.add(t2a);
+
+        //original Tutorial
+        DefaultMutableTreeNode x1 = new DefaultMutableTreeNode("Inner 1");
+        t2a.add(x1);
+
+        //original Tutorial
+        DefaultMutableTreeNode x2 = new DefaultMutableTreeNode("Inner 2");
+        t2a.add(x2);
 
         //original Tutorial
         DefaultMutableTreeNode t3a = new DefaultMutableTreeNode("Table 3");
