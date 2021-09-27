@@ -1,3 +1,5 @@
+package testing;
+
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 
 import javax.swing.*;

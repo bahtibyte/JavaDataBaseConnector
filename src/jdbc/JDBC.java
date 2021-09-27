@@ -117,8 +117,10 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
 
         mainMenu = new JMenu("Menu");
         connectItem = new JMenuItem("Connection");
-        refreshItem = new JMenuItem("Refresh");
+        connectItem.addActionListener(this);
         mainMenu.add(connectItem);
+        refreshItem = new JMenuItem("Refresh");
+        refreshItem.addActionListener(this);
         mainMenu.add(refreshItem);
 
         fileMenu = new JMenu("File");
@@ -176,15 +178,18 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
                             String localizedSchema = db + "." + schema;
                             String localizedTable = localizedSchema + "." + table;
 
+                            DefaultMutableTreeNode schemaNode = new DefaultMutableTreeNode(schema);
+                            DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(table);
+
                             if (!schemaLookup.containsKey(localizedSchema)) {
-                                DefaultMutableTreeNode schemaNode = new DefaultMutableTreeNode(schema);
                                 schemaLookup.put(localizedSchema, schemaNode);
                                 dbLookup.get(db).add(schemaNode);
+                            }else{
+                                schemaNode = schemaLookup.get(localizedSchema);
                             }
 
-                            DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(table);
                             tableLookup.put(localizedTable, tableNode);
-                            schemaLookup.get(localizedSchema).add(tableNode);
+                            schemaNode.add(tableNode);
                         }
 
                         frame.repaint();
@@ -277,6 +282,14 @@ public class JDBC extends JPanel implements TreeSelectionListener, TreeExpansion
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(newQuery)) {
             createNewQuery();
+        }
+        if (e.getSource().equals(connectItem)){
+            this.frame.dispose();
+            Driver.validate();
+        }
+        if (e.getSource().equals(refreshItem)){
+            this.frame.dispose();
+            Driver.connect(login);
         }
     }
 

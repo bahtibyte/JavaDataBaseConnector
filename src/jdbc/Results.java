@@ -11,6 +11,7 @@ public class Results {
     private ResultSet results;
 
     public void fetchTables(Login login, String db) {
+        
         try {
             String mysqlUrl = "jdbc:sqlserver://"+login.getAddress()+":"+login.getPort()+";databaseName="+db;
 

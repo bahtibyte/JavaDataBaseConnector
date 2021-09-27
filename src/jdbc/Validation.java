@@ -262,7 +262,9 @@ public class Validation implements ActionListener, KeyListener {
         String dbs = names.substring(1, names.length()-1).replaceAll(", ", "\n");
         databasesArea.setText(dbs);
 
+        System.out.println("Keep this print statement right here");
         this.frame.pack();
+        this.frame.repaint();
     }
 
     private void saveLogin() {
@@ -374,13 +376,17 @@ public class Validation implements ActionListener, KeyListener {
         }).start();
 
         try {
+            Thread.sleep(150);
+
             System.out.println("Starting connection to "+connectionUrl);
             con = DriverManager.getConnection(connectionUrl, username, password);
             boolean reachable = con.isValid(3);
 
             if (reachable) {
                 System.out.println("Connected Successfully");
-                dialog[0].dispose();
+                if (dialog[0] != null) {
+                    dialog[0].dispose();
+                }
 
                 // If the current info is what we have on file, then update last login
                 if (current.equals(match)) {
@@ -406,7 +412,7 @@ public class Validation implements ActionListener, KeyListener {
             se.printStackTrace();
             dialog[0].dispose();
             frame.setVisible(true);
-        } catch (SQLException e){
+        } catch (Exception e){
             e.printStackTrace();
             dialog[0].dispose();
             frame.setVisible(true);
