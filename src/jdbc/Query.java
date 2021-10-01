@@ -1,14 +1,33 @@
 package jdbc;
 
-import oop.Login;
-import oop.Pair;
+import jdbc.helpers.Login;
+import jdbc.helpers.Pair;
 
 import java.sql.*;
 import java.util.ArrayList;
 
-public class Results {
+public class Query {
 
+    private Connection connection;
     private ResultSet results;
+    public String lastSQL;
+
+    private String db;
+
+    private Exception exception;
+
+
+    public boolean isComplete() {
+        return results != null;
+    }
+
+    public boolean isExceptionThrown() {
+        return exception != null;
+    }
+
+    public String getExceptionMessage() {
+        return this.exception.getMessage();
+    }
 
     public void fetchTables(Login login, String db) {
         
@@ -54,8 +73,55 @@ public class Results {
             Statement stmt = con.createStatement();
 
             String SQL = "SELECT * FROM "+schema+".["+table+"]";
+            lastSQL = SQL;
 
             ResultSet rs = stmt.executeQuery(SQL);
+
+            results = rs;
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void runCustomQuery(String sql) {
+        new Thread(() -> {
+            try {
+                if (connection != null) {
+                    System.out.println("This query has been invoked already. Closing connection");
+                    connection.close();
+                    return;
+                }
+
+                connection = DriverManager.getConnection(this.getServerUrl());
+                Statement stmt = connection.createStatement();
+
+                ResultSet rs = stmt.executeQuery(sql);
+                lastSQL = sql;
+
+                results = rs;
+            } catch (Exception e) {
+                e.printStackTrace();
+                exception = e;
+            }
+        }).start();
+    }
+
+    private String getServerUrl() {
+        final Login login = Constants.login;
+        return "jdbc:sqlserver://"+ login.getAddress()+":"+ login.getPort()+";"+
+                "user="+ login.getUsername()+";password="+ login.getPassword();
+    }
+
+    public void runQuery(Login login, String db, String sql) {
+        try {
+            String mysqlUrl = "jdbc:sqlserver://"+login.getAddress()+":"+login.getPort()+";databaseName="+db;
+
+            Connection con = DriverManager.getConnection(mysqlUrl, login.getUsername(), login.getPassword());
+
+            Statement stmt = con.createStatement();
+
+            ResultSet rs = stmt.executeQuery(sql);
+            lastSQL = sql;
 
             results = rs;
         } catch (Exception e){
@@ -71,7 +137,7 @@ public class Results {
             int count = rsMetaData.getColumnCount();
 
             String cols[] = new String[count+1];
-            cols[0] = "#";
+            cols[0] = "";
             for (int i = 2; i <= count+1; i++) {
                 cols[i - 1] = rsMetaData.getColumnName(i-1);
             }

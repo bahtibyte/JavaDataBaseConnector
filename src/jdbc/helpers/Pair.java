@@ -1,4 +1,4 @@
-package oop;
+package jdbc.helpers;
 
 public class Pair<X, Y> {
 

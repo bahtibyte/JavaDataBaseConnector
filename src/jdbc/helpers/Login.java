@@ -1,6 +1,5 @@
-package oop;
+package jdbc.helpers;
 
-import javax.security.auth.login.LoginContext;
 import java.util.ArrayList;
 
 public class Login {
@@ -37,48 +36,24 @@ public class Login {
         return nickname;
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
     public String getAddress() {
         return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
     }
 
     public String getPort() {
         return port;
     }
 
-    public void setPort(String port) {
-        this.port = port;
-    }
-
     public String getUsername() {
         return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public ArrayList<String> getDatabases() {
         return databases;
-    }
-
-    public void setDatabases(ArrayList<String> databases) {
-        this.databases = databases;
     }
 
     @Override

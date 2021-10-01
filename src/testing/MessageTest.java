@@ -1,7 +1,6 @@
 package testing;
 
-import jdbc.Results;
-import oop.Login;
+import jdbc.Query;
 
 import javax.swing.*;
 import java.sql.*;
@@ -59,7 +58,7 @@ public class MessageTest {
                     long startTime = System.currentTimeMillis();
                     long currentTime = System.currentTimeMillis();
 
-                    Results results = new Results();
+                    Query query = new Query();
                     //results.fetchTables(login, db);
                     System.out.println("Starting my code");
                     while (currentTime - startTime < timeout) {

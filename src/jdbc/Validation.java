@@ -1,9 +1,8 @@
 package jdbc;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
-import jdbc.Driver;
 import net.miginfocom.swing.MigLayout;
-import oop.Login;
+import jdbc.helpers.Login;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -172,7 +171,7 @@ public class Validation implements ActionListener, KeyListener {
     private void initialize() {
         frame = new JFrame("JDBC");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setResizable(true);
+        frame.setResizable(false);
 
 
         panel = new JPanel(new MigLayout("ins 15"));
