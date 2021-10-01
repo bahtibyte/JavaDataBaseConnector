@@ -1,8 +1,10 @@
 package jdbc;
 
+import jdbc.helpers.Constants;
+import jdbc.helpers.Shared;
 import jdbc.listeners.TreeMouseListener;
-import jdbc.helpers.Login;
-import jdbc.helpers.Pair;
+import jdbc.oop.Login;
+import jdbc.oop.Pair;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -28,7 +30,7 @@ public class JDBC implements ActionListener {
 
     protected JTree dbTree;
 
-    public static Login login;
+    private Login login;
 
     private HashMap<String, DefaultMutableTreeNode> dbLookup;
     private HashMap<String, DefaultMutableTreeNode> schemaLookup;
@@ -67,6 +69,8 @@ public class JDBC implements ActionListener {
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+
+        Shared.registerFrame(frame);
     }
 
     /**
@@ -145,24 +149,24 @@ public class JDBC implements ActionListener {
                 long startTime = System.currentTimeMillis();
                 long currentTime = System.currentTimeMillis();
 
-                Query results = new Query();
-                results.fetchTables(login, db);
+                Query query = new Query();
+                query.fetchTables(db);
 
                 while (currentTime - startTime < timeout) {
                     Thread.sleep(100);
                     currentTime = System.currentTimeMillis();
-                    if (results.isExceptionThrown() || results.isComplete())
+                    if (query.isExceptionThrown() || query.isFetchTablesReady())
                         break;
                 }
 
-                if (!results.isComplete()) {
+                if (!query.isFetchTablesReady()) {
                     System.out.println("Unable to retrieve information about database="+db);
                     dbLookup.get(db).add(new DefaultMutableTreeNode("Unavailable"));
                     frame.repaint();
                     return;
                 }
 
-                ArrayList<Pair<String, String>> pairs = results.extractTables(results.getResults());
+                ArrayList<Pair<String, String>> pairs = query.getSchemaTables();
 
                 for (Pair<String, String> schemaTable : pairs) {
 

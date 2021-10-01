@@ -1,24 +1,28 @@
 package jdbc;
 
-import jdbc.helpers.Login;
-import jdbc.helpers.Pair;
+import jdbc.helpers.Constants;
+import jdbc.helpers.Messages;
+import jdbc.helpers.QueryResults;
+import jdbc.oop.Login;
+import jdbc.oop.Pair;
 
 import java.sql.*;
 import java.util.ArrayList;
 
 public class Query {
 
+    private ArrayList<Pair<String, String>> schemaTables;
+
     private Connection connection;
-    private ResultSet results;
-    public String lastSQL;
-
-    private String db;
-
     private Exception exception;
-
+    private QueryResults queryResults;
 
     public boolean isComplete() {
-        return results != null;
+        return queryResults != null;
+    }
+
+    public boolean isFetchTablesReady() {
+        return schemaTables != null;
     }
 
     public boolean isExceptionThrown() {
@@ -29,58 +33,50 @@ public class Query {
         return this.exception.getMessage();
     }
 
-    public void fetchTables(Login login, String db) {
-        
-        try {
-            String mysqlUrl = "jdbc:sqlserver://"+login.getAddress()+":"+login.getPort()+";databaseName="+db;
-
-            Connection con = DriverManager.getConnection(mysqlUrl, login.getUsername(), login.getPassword());
-
-            DatabaseMetaData metaData = con.getMetaData();
-            String[] types = {"TABLE"};
-
-            results = metaData.getTables(null, null, "%", types);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+    public ArrayList<Pair<String, String>> getSchemaTables() {
+        return schemaTables;
     }
 
-    public ArrayList<Pair<String, String>> extractTables(ResultSet set) {
+    public QueryResults getResults() {
+        return queryResults;
+    }
 
+    public void fetchTables(String db) {
+        new Thread(() -> {
+            try {
+                if (connection != null) {
+                    Messages.error("Query already invoked. This error should not appear");
+                    connection.close();
+                    return;
+                }
+
+                connection = DriverManager.getConnection(getServerUrl() + ";databaseName=" + db);
+
+                DatabaseMetaData metaData = connection.getMetaData();
+                String[] types = {"TABLE"};
+
+                ResultSet resultSet = metaData.getTables(null, null, "%", types);
+                schemaTables = extractTables(resultSet);
+
+            } catch (Exception e) {
+                exception = e;
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private ArrayList<Pair<String, String>> extractTables(ResultSet set) throws SQLException {
         ArrayList<Pair<String, String>> pairs = new ArrayList<Pair<String, String>>();
 
-        try {
-            while (set.next()) {
-                String schema = set.getString("TABLE_SCHEM");
-                String table = set.getString("TABLE_NAME");
+        while (set.next()) {
+            String schema = set.getString("TABLE_SCHEM");
+            String table = set.getString("TABLE_NAME");
 
-                Pair<String, String> pair = new Pair<>(schema, table);
-                pairs.add(pair);
-            }
-        }catch(Exception e) {
-            e.printStackTrace();
+            Pair<String, String> pair = new Pair<>(schema, table);
+            pairs.add(pair);
         }
 
         return pairs;
-    }
-
-    public void fetchAll(Login login, String db, String schema, String table) {
-        try {
-            String mysqlUrl = "jdbc:sqlserver://"+login.getAddress()+":"+login.getPort()+";databaseName="+db;
-
-            Connection con = DriverManager.getConnection(mysqlUrl, login.getUsername(), login.getPassword());
-
-            Statement stmt = con.createStatement();
-
-            String SQL = "SELECT * FROM "+schema+".["+table+"]";
-            lastSQL = SQL;
-
-            ResultSet rs = stmt.executeQuery(SQL);
-
-            results = rs;
-        } catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     public void runCustomQuery(String sql) {
@@ -93,76 +89,71 @@ public class Query {
                 }
 
                 connection = DriverManager.getConnection(this.getServerUrl());
-                Statement stmt = connection.createStatement();
+                Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-                ResultSet rs = stmt.executeQuery(sql);
-                lastSQL = sql;
+                ResultSet resultSet = statement.executeQuery(sql);
+                queryResults = extractResults(resultSet, sql);
+                Constants.queries.add(sql);
 
-                results = rs;
             } catch (Exception e) {
-                e.printStackTrace();
                 exception = e;
+                e.printStackTrace();
             }
         }).start();
     }
 
+    private QueryResults extractResults(ResultSet resultSet, String sql) throws SQLException {
+
+        ResultSetMetaData metaData = resultSet.getMetaData();
+
+        int rows = getRowCount(resultSet);
+        int cols = metaData.getColumnCount() + 1;
+
+        String colNames[] = new String[cols];
+        colNames[0] = "";
+
+        for (int i = 1; i < cols; i++) {
+            colNames[i] = metaData.getColumnName(i);
+        }
+
+        Object data[][] = new Object[rows][];
+
+        for (int row = 0; row < rows; row++) {
+            resultSet.next();
+            data[row] = new Object[cols];
+            data[row][0] = Integer.valueOf(row + 1);
+            for (int i = 1; i < cols; i++) {
+                data[row][i] = resultSet.getObject(i);
+            }
+        }
+
+        return new QueryResults(data, colNames, sql, rows, cols);
+    }
+
+    private static int getRowCount(ResultSet resultSet) {
+        if (resultSet == null) {
+            return -1;
+        }
+
+        try {
+            resultSet.last();
+            return resultSet.getRow();
+        } catch (SQLException exp) {
+            exp.printStackTrace();
+        } finally {
+            try {
+                resultSet.beforeFirst();
+            } catch (SQLException exp) {
+                exp.printStackTrace();
+            }
+        }
+
+        return -1;
+    }
+
     private String getServerUrl() {
         final Login login = Constants.login;
-        return "jdbc:sqlserver://"+ login.getAddress()+":"+ login.getPort()+";"+
-                "user="+ login.getUsername()+";password="+ login.getPassword();
-    }
-
-    public void runQuery(Login login, String db, String sql) {
-        try {
-            String mysqlUrl = "jdbc:sqlserver://"+login.getAddress()+":"+login.getPort()+";databaseName="+db;
-
-            Connection con = DriverManager.getConnection(mysqlUrl, login.getUsername(), login.getPassword());
-
-            Statement stmt = con.createStatement();
-
-            ResultSet rs = stmt.executeQuery(sql);
-            lastSQL = sql;
-
-            results = rs;
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public Pair<String[], ArrayList<String[]>> extraRows(ResultSet set){
-        Pair<String[], ArrayList<String[]>> pairs = null;
-
-        try {
-            ResultSetMetaData rsMetaData = set.getMetaData();
-            int count = rsMetaData.getColumnCount();
-
-            String cols[] = new String[count+1];
-            cols[0] = "";
-            for (int i = 2; i <= count+1; i++) {
-                cols[i - 1] = rsMetaData.getColumnName(i-1);
-            }
-
-            ArrayList<String[]> rows = new ArrayList<String[]>();
-
-            pairs = new Pair<String[], ArrayList<String[]>>(cols, rows);
-            int n = 1;
-            while (set.next()) {
-                String row[] = new String[count+1];
-                row[0] = n++ + "";
-                for (int i = 2; i <= count+1; i++) {
-                    row[i-1] = set.getString(i-1);
-                }
-                rows.add(row);
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-            return pairs;
-        }
-
-        return pairs;
-    }
-
-    public ResultSet getResults(){
-        return results;
+        return "jdbc:sqlserver://" + login.getAddress() + ":" + login.getPort() + ";" +
+                "user=" + login.getUsername() + ";password=" + login.getPassword();
     }
 }

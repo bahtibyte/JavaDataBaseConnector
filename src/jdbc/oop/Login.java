@@ -1,4 +1,4 @@
-package jdbc.helpers;
+package jdbc.oop;
 
 import java.util.ArrayList;
 

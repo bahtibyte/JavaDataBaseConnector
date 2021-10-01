@@ -2,7 +2,7 @@ package jdbc;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import net.miginfocom.swing.MigLayout;
-import jdbc.helpers.Login;
+import jdbc.oop.Login;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -457,7 +457,7 @@ public class Validation implements ActionListener, KeyListener {
                 }
             }
         }
-    }
+    }//test
 
     @Override
     public void keyTyped(KeyEvent e) {

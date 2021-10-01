@@ -1,9 +1,6 @@
 package jdbc.listeners;
 
-import jdbc.DisplayResults;
-import jdbc.Query;
-import jdbc.helpers.Messages;
-import jdbc.helpers.Pair;
+import jdbc.helpers.Shared;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -11,7 +8,6 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
 
 public class TreeMouseListener implements MouseListener {
 
@@ -42,44 +38,8 @@ public class TreeMouseListener implements MouseListener {
         if (nodes.length != 4)
             return;
 
-        String db = nodes[1].toString();
-        String schema = nodes[2].toString();
-        String table = nodes[3].toString();
-
-        new Thread(() -> {
-            try {
-                final long timeout = 1500;
-                final long startTime = System.currentTimeMillis();
-
-                Query query = new Query();
-                query.runCustomQuery(selectAllSQL(db, schema, table));
-
-                long currentTime = System.currentTimeMillis();
-                while (currentTime - startTime < timeout) {
-                    Thread.sleep(100);
-                    currentTime = System.currentTimeMillis();
-                    if (query.isExceptionThrown() || query.isComplete())
-                        break;
-                }
-
-                if (query.isExceptionThrown()) {
-                    Messages.exception(query.getExceptionMessage());
-                }
-
-                else if (!query.isComplete()) {
-                    Messages.error("Unable to complete Query.\n@TreeMouseListener");
-                }
-
-                else{
-                    Pair<String[], ArrayList<String[]>> pair = query.extraRows(query.getResults());
-                    DisplayResults display = new DisplayResults(pair, db, schema, table, query.lastSQL);
-                }
-
-            } catch (Exception e) {
-                Messages.exception("Unable to open table.\n@TreeMouseListener");
-                e.printStackTrace();
-            }
-        }).start();
+        String sql = selectAllSQL(nodes[1].toString(), nodes[2].toString(), nodes[3].toString());
+        Shared.executeQuery(sql, TreeMouseListener.class);
     }
 
     private String selectAllSQL(String db, String schema, String table) {
