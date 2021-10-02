@@ -1,5 +1,6 @@
 package jdbc.helpers;
 
+import jdbc.JDBC;
 import jdbc.oop.Login;
 
 import javax.swing.*;
@@ -8,8 +9,8 @@ import java.util.ArrayList;
 
 public class Constants {
 
-    /* This frame should not be closed, else the main thread will be killed */
-    public static JFrame jdbcFrame;
+    /* Reference to the main object */
+    public static JDBC jdbc;
 
     /* Only one active login could be present per launch. Re-connect refreshes Login */
     public static Login login;

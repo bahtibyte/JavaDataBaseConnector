@@ -1,10 +1,9 @@
 package jdbc;
 
 import jdbc.helpers.Constants;
-import jdbc.helpers.Messages;
 import jdbc.helpers.Shared;
+import jdbc.listeners.CodeAreaMouseListener;
 import net.miginfocom.swing.MigLayout;
-import jdbc.oop.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.ArrayList;
 
 public class QueryPanel extends JPanel implements KeyListener, ActionListener {
 
@@ -22,25 +20,29 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
     private static final int fontSize = 16;
     public static final Font font = new Font("Consolas", Font.PLAIN, fontSize);
 
-    private final int parent;
+    private JFrame parentFrame;
+    public final int parent;
 
     private JPanel textPanel;
     private JPanel buttonPanel;
 
     private JLabel numberLine;
-    private JTextArea codeArea;
+    public JTextArea codeArea;
 
     private JButton executeButton;
     private JButton formatButton;
     private JButton saveButton;
     private JButton closeButton;
 
-    public QueryPanel(String initialSql, int parent) {
+    public QueryPanel(JFrame parentFrame, String initialSql, int source) {
         super(new MigLayout("fill"));
+
+        this.parentFrame  = parentFrame;
 
         codeArea = new JTextArea(initialSql);
         codeArea.setFont(font);
         codeArea.addKeyListener(this);
+        codeArea.addMouseListener(new CodeAreaMouseListener(parentFrame, this));
 
         numberLine = new JLabel();
         numberLine.setFont(font);
@@ -74,10 +76,10 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
 
         add(buttonPanel, "dock south");
 
-        this.parent = parent;
+        this.parent = source;
     }
 
-    private void updateNumberLine() {
+    public void updateNumberLine() {
         String text = codeArea.getText();
         int replace = text.length() - text.replace("\n", "").length();
         int count = replace + 1;
@@ -101,23 +103,20 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
         return builder.toString();
     }
 
-    private void customQuery() {
+    public void executeQuery() {
         String sql = codeArea.getText();
         Shared.executeQuery(sql, QueryPanel.class);
     }
 
-    /**
-     * TODO: Complete this function
-     */
     private void formatSql() {
-
+        Shared.formatQuery(this);
     }
 
     /**
      * TODO: Complete this function
      */
     private void saveSql() {
-
+        Shared.saveQuery(this);
     }
 
     private void closePanel() {
@@ -128,9 +127,15 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
             parentFrame.dispose();
         }
 
-        /* TODO: Implement this */
         else if (parent == TABBED_PARENT) {
-
+            JTabbedPane tabbedPane = Constants.jdbc.tabbedPane;
+            int index = tabbedPane.getSelectedIndex();
+            tabbedPane.remove(index);
+            Constants.jdbc.queryPanels.remove(index);
+            if (tabbedPane.getTabCount() == 0) {
+                Constants.jdbc.queryCounter = 0;
+                Constants.jdbc.createNewQuery("");
+            }
         }
 
     }
@@ -140,7 +145,7 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
         Object source = e.getSource();
 
         if (source.equals(executeButton))
-            customQuery();
+            executeQuery();
 
         if (source.equals(formatButton))
             formatSql();

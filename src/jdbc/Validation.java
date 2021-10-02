@@ -1,6 +1,7 @@
 package jdbc;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+import jdbc.helpers.Settings;
 import net.miginfocom.swing.MigLayout;
 import jdbc.oop.Login;
 import org.json.simple.JSONArray;
@@ -19,6 +20,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 
 public class Validation implements ActionListener, KeyListener {
 
@@ -53,11 +55,13 @@ public class Validation implements ActionListener, KeyListener {
     }
 
     private File getJsonFile() {
-        File file = new File(System.getProperty("user.home")+"/.jdbc");
-
+        File home = new File(System.getProperty("user.home"));
+        File file = new File(home, ".jdbc");
         if (!file.exists()) {
             file.mkdir();
         }
+
+        Settings.jdbcFolder = file;
 
         File jsonFile = new File(file, "logins.json");
 

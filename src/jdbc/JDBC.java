@@ -1,16 +1,21 @@
 package jdbc;
 
 import jdbc.helpers.Constants;
+import jdbc.helpers.Settings;
 import jdbc.helpers.Shared;
 import jdbc.listeners.TreeMouseListener;
 import jdbc.oop.Login;
 import jdbc.oop.Pair;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -18,36 +23,35 @@ public class JDBC implements ActionListener {
 
     private static final String TITLE = "Java Database Connector";
     private static final int WIDTH = 900;
-    private static final int HEIGHT = 500;
+    private static final int HEIGHT = 700;
 
-    private JFrame frame;
+    public JFrame frame;
 
     private JMenuBar menuBar;
     private JMenu mainMenu, fileMenu, settings;
     private JMenuItem connectItem, refreshItem;
-    private JMenuItem newQuery, executeQuery, openQueryItem, saveQueryItem;
+    private JMenuItem newQuery, executeQueryItem, openQueryItem, saveQueryItem;
     private JMenuItem preferencesItem;
 
-    protected JTree dbTree;
+    private JTree dbTree;
 
     private Login login;
 
     private HashMap<String, DefaultMutableTreeNode> dbLookup;
     private HashMap<String, DefaultMutableTreeNode> schemaLookup;
 
-    private ArrayList<QueryPanel> tabs;
-
-    private JTabbedPane tabbedPane;
-
-    private int queryCounter = 0;
+    public JTabbedPane tabbedPane;
+    public ArrayList<QueryPanel> queryPanels;
+    public int queryCounter = 0;
 
     public JDBC(Login login) {
+        Constants.jdbc = this;
+
         frame = new JFrame(TITLE);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
         Constants.login = this.login = login;
-        Constants.jdbcFrame = frame;
 
         DefaultMutableTreeNode root = createTreeNodes();
         dbTree = new JTree(root);
@@ -56,7 +60,7 @@ public class JDBC implements ActionListener {
 
         JScrollPane treeView = new JScrollPane(dbTree);
         tabbedPane = new JTabbedPane();
-        tabs = new ArrayList<>();
+        queryPanels = new ArrayList<QueryPanel>();
         createNewQuery("");
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeView, tabbedPane);
@@ -96,13 +100,16 @@ public class JDBC implements ActionListener {
         newQuery.addActionListener(this);
         fileMenu.add(newQuery);
 
-        executeQuery = new JMenuItem("Execute Query");
-        fileMenu.add(executeQuery);
+        executeQueryItem = new JMenuItem("Execute Query");
+        executeQueryItem.addActionListener(this);
+        fileMenu.add(executeQueryItem);
 
         openQueryItem = new JMenuItem("Open Query");
+        openQueryItem.addActionListener(this);
         fileMenu.add(openQueryItem);
 
         saveQueryItem = new JMenuItem("Save Query");
+        saveQueryItem.addActionListener(this);
         fileMenu.add(saveQueryItem);
 
         settings = new JMenu("Settings");
@@ -198,12 +205,11 @@ public class JDBC implements ActionListener {
     /**
      * Creates a new Query based on
      */
-    private void createNewQuery(String db){
-        QueryPanel queryPanel = new QueryPanel(db, QueryPanel.TABBED_PARENT);
-
-        tabs.add(queryPanel);
+    public void createNewQuery(String sql){
+        QueryPanel queryPanel = new QueryPanel(frame, sql, QueryPanel.TABBED_PARENT);
+        queryPanels.add(queryPanel);
         tabbedPane.addTab("New Query "+ (++queryCounter), null, queryPanel, "unsaved");
-        tabbedPane.setSelectedIndex(tabs.size()-1);
+        tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
     }
 
     /**
@@ -211,7 +217,6 @@ public class JDBC implements ActionListener {
     * */
     private void reconnect() {
         this.frame.dispose();
-        Constants.jdbcFrame = null;
         for (JFrame frame : Constants.activeFrames) {
             frame.dispose();
         }
@@ -221,10 +226,49 @@ public class JDBC implements ActionListener {
 
     private void refreshConnection() {
         this.frame.dispose();
-        Constants.jdbcFrame = null;
         Driver.connect(login);
     }
 
+    private void executeQuery() {
+        this.queryPanels.get(tabbedPane.getSelectedIndex()).executeQuery();
+    }
+
+    private void saveQuery() {
+        Shared.saveQuery(this.queryPanels.get(tabbedPane.getSelectedIndex()));
+    }
+
+    private void openQuery() {
+        File selectedFile = Shared.getSelectedFile();
+
+        if (selectedFile == null)
+            return;
+
+        String name = selectedFile.getName();
+        int len = name.length();
+        if (name.indexOf(".sql") != len-4)
+            return;
+
+        String sql = getSql(selectedFile);
+        createNewQuery(sql);
+        Constants.jdbc.tabbedPane.setTitleAt(Constants.jdbc.tabbedPane.getSelectedIndex(), name);
+    }
+
+    private String getSql(File file){
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            StringBuilder builder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+                builder.append("\n");
+            }
+            reader.close();
+            return builder.toString();
+        }catch (Exception e){
+            e.printStackTrace();
+            return "";
+        }
+    }
 
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
@@ -237,5 +281,14 @@ public class JDBC implements ActionListener {
 
         if (source.equals(refreshItem))
             refreshConnection();
+
+        if (source.equals(executeQueryItem))
+            executeQuery();
+
+        if (source.equals(saveQueryItem))
+            saveQuery();
+
+        if (source.equals(openQueryItem))
+            openQuery();
     }
 }

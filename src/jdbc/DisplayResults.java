@@ -179,7 +179,7 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
         sqlView.setPreferredSize(new Dimension(500, 300));
         sqlView.setResizable(true);
 
-        sqlView.getContentPane().add(new QueryPanel(this.queryResults.getSql(), QueryPanel.JFRAME_PARENT));
+        sqlView.getContentPane().add(new QueryPanel(sqlView, this.queryResults.getSql(), QueryPanel.JFRAME_PARENT));
 
         sqlView.pack();
         sqlView.setLocationRelativeTo(null);
