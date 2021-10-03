@@ -2,6 +2,8 @@ package jdbc.helpers;
 
 public class QueryResults {
 
+    private String db;
+
     private Object[][] data;
     private String[] colNames;
 
@@ -16,6 +18,14 @@ public class QueryResults {
         this.sql = sql;
         this.rows = rows;
         this.cols = cols;
+    }
+
+    public void setDB(String db){
+        this.db = db;
+    }
+
+    public String getDB(){
+        return db;
     }
 
     public Object[][] getData() {

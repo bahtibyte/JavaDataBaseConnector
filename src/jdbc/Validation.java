@@ -43,15 +43,10 @@ public class Validation implements ActionListener, KeyListener {
     private File jsonFile;
 
     public Validation() {
-
         jsonFile = getJsonFile();
         extractLogins();
 
         initialize();
-
-        if (lastLogin != null) {
-            loadLogin(lastLogin);
-        }
     }
 
     private File getJsonFile() {
@@ -185,32 +180,37 @@ public class Validation implements ActionListener, KeyListener {
 
         nicknameLabel = new JLabel("Server Nickname:");
         panel.add(nicknameLabel);
-        nicknameField = new JTextField();
+        nicknameField = new JTextField(lastLogin != null ? lastLogin.getNickname() : "");
         panel.add(nicknameField, "pushx, growx, wrap");
 
         serverLabel = new JLabel("Server Address:");
         panel.add(serverLabel);
-        serverField = new JTextField();
+        serverField = new JTextField(lastLogin != null ? lastLogin.getAddress() : "");
         panel.add(serverField, "pushx, growx, wrap");
 
         portLabel = new JLabel("Server Port:");
         panel.add(portLabel);
-        portField = new JTextField();
+        portField = new JTextField(lastLogin != null ? lastLogin.getPort() : "");
         panel.add(portField, "pushx, growx, wrap");
 
         userLabel = new JLabel("Username:");
         panel.add(userLabel);
-        userField = new JTextField();
+        userField = new JTextField(lastLogin != null ? lastLogin.getUsername() : "");
         panel.add(userField, "pushx, growx, wrap");
 
         passwordLabel = new JLabel("Password");
         panel.add(passwordLabel);
-        passwordField = new JPasswordField();
+        passwordField = new JPasswordField(lastLogin != null ? lastLogin.getPassword() : "");
         panel.add(passwordField, "growx, wrap");
 
         databasesLabel = new JLabel("Databases:");
         panel.add(databasesLabel);
-        databasesArea = new JTextArea();
+        String dbs = "";
+        if (lastLogin != null) {
+            String names = lastLogin.getDatabases().toString();
+            dbs = names.substring(1, names.length()-1).replaceAll(", ", "\n");
+        }
+        databasesArea = new JTextArea(dbs);
         databasesArea.addKeyListener(this);
         (databasesArea).setBorder(new JTextField().getBorder());
         panel.add(databasesArea, "pushx, growx, wrap");
@@ -265,7 +265,6 @@ public class Validation implements ActionListener, KeyListener {
         String dbs = names.substring(1, names.length()-1).replaceAll(", ", "\n");
         databasesArea.setText(dbs);
 
-        System.out.println("Keep this print statement right here");
         this.frame.pack();
         this.frame.repaint();
     }

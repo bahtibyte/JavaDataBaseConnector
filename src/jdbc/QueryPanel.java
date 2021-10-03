@@ -23,21 +23,44 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
     private JFrame parentFrame;
     public final int parent;
 
+    private JPanel topRow;
     private JPanel textPanel;
-    private JPanel buttonPanel;
+    private JPanel botRow;
 
+    private JLabel useLabel;
+    private JComboBox dropDown;
     private JLabel numberLine;
     public JTextArea codeArea;
-
+    private JButton clearButton;
     private JButton executeButton;
     private JButton formatButton;
     private JButton saveButton;
     private JButton closeButton;
 
-    public QueryPanel(JFrame parentFrame, String initialSql, int source) {
+    public QueryPanel(JFrame parentFrame, String initialSql, String db, int source) {
         super(new MigLayout("fill"));
 
         this.parentFrame  = parentFrame;
+
+        topRow = new JPanel(new MigLayout("", "[center, grow]"));
+        topRow.setBackground(Color.WHITE);
+
+        useLabel = new JLabel("USE Database:");
+        useLabel.setFont(font);
+        topRow.add(useLabel, "span 2, split 2, left");
+
+        String[] dbs = Constants.login.getDatabases().toArray(new String[Constants.login.getDatabases().size()]);
+        dropDown = new JComboBox(dbs);
+        if (db != null)
+            dropDown.setSelectedItem(db);
+        dropDown.setFont(font);
+        topRow.add(dropDown, "");
+
+        clearButton = new JButton("Clear");
+        clearButton.addActionListener(this);
+        topRow.add(clearButton, "right");
+
+        add(topRow, "dock north");
 
         codeArea = new JTextArea(initialSql);
         codeArea.setFont(font);
@@ -56,25 +79,26 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
 
         add(new JScrollPane(textPanel), "grow, pushy");
 
-        buttonPanel = new JPanel(new MigLayout("", "[center, grow]"));
+        botRow = new JPanel(new MigLayout("", "[center, grow]"));
+        botRow.setBackground(Color.WHITE);
 
         executeButton = new JButton("Execute");
         executeButton.addActionListener(this);
-        buttonPanel.add(executeButton, "left");
+        botRow.add(executeButton, "left");
 
         formatButton = new JButton("Format");
         formatButton.addActionListener(this);
-        buttonPanel.add(formatButton, "span 2, split 3, right");
+        botRow.add(formatButton, "span 2, split 3, right");
 
         saveButton = new JButton("Save");
         saveButton.addActionListener(this);
-        buttonPanel.add(saveButton, "");
+        botRow.add(saveButton, "");
 
         closeButton = new JButton("Close");
         closeButton.addActionListener(this);
-        buttonPanel.add(closeButton, "");
+        botRow.add(closeButton, "");
 
-        add(buttonPanel, "dock south");
+        add(botRow, "dock south");
 
         this.parent = source;
     }
@@ -103,18 +127,25 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
         return builder.toString();
     }
 
+    public String getSelectedDB() {
+        return this.dropDown.getSelectedItem().toString();
+    }
+
     public void executeQuery() {
-        String sql = codeArea.getText();
-        Shared.executeQuery(sql, QueryPanel.class);
+        Shared.executeQuery(codeArea.getText(), getSelectedDB(), QueryPanel.class);
+    }
+
+    private void clearSql() {
+        this.codeArea.setText("");
+        this.codeArea.setCaretPosition(0);
+        this.codeArea.requestFocus();
+        this.updateNumberLine();
     }
 
     private void formatSql() {
         Shared.formatQuery(this);
     }
 
-    /**
-     * TODO: Complete this function
-     */
     private void saveSql() {
         Shared.saveQuery(this);
     }
@@ -134,7 +165,7 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
             Constants.jdbc.queryPanels.remove(index);
             if (tabbedPane.getTabCount() == 0) {
                 Constants.jdbc.queryCounter = 0;
-                Constants.jdbc.createNewQuery("");
+                Constants.jdbc.createNewQuery("", null);
             }
         }
 
@@ -143,6 +174,9 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
+
+        if (source.equals(clearButton))
+            clearSql();
 
         if (source.equals(executeButton))
             executeQuery();
@@ -155,6 +189,7 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
 
         if (source.equals(closeButton))
             closePanel();
+
     }
 
     @Override

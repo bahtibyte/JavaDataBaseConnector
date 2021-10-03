@@ -1,6 +1,7 @@
 package jdbc;
 
 import jdbc.helpers.Constants;
+import jdbc.helpers.IconHelper;
 import jdbc.helpers.Settings;
 import jdbc.helpers.Shared;
 import jdbc.listeners.TreeMouseListener;
@@ -8,7 +9,6 @@ import jdbc.oop.Login;
 import jdbc.oop.Pair;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
@@ -61,7 +61,7 @@ public class JDBC implements ActionListener {
         JScrollPane treeView = new JScrollPane(dbTree);
         tabbedPane = new JTabbedPane();
         queryPanels = new ArrayList<QueryPanel>();
-        createNewQuery("");
+        createNewQuery("", null);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeView, tabbedPane);
         splitPane.setOneTouchExpandable(true);
@@ -86,35 +86,52 @@ public class JDBC implements ActionListener {
 
         mainMenu = new JMenu("Menu");
 
+        UIManager.getIcon("FileView.directoryIcon");
+        UIManager.getIcon("FileView.fileIcon");
+        UIManager.getIcon("FileView.computerIcon");
+        UIManager.getIcon("FileView.hardDriveIcon");
+        UIManager.getIcon("FileView.floppyDriveIcon");
+
+        UIManager.getIcon("FileChooser.newFolderIcon");
+        UIManager.getIcon("FileChooser.upFolderIcon");
+        UIManager.getIcon("FileChooser.homeFolderIcon");
+
         connectItem = new JMenuItem("Connect");
         connectItem.addActionListener(this);
+        connectItem.setIcon(IconHelper.connectIcon);
         mainMenu.add(connectItem);
 
         refreshItem = new JMenuItem("Refresh");
         refreshItem.addActionListener(this);
+        refreshItem.setIcon(IconHelper.refreshIcon);
         mainMenu.add(refreshItem);
 
         fileMenu = new JMenu("File");
 
         newQuery = new JMenuItem("New Query");
         newQuery.addActionListener(this);
+        newQuery.setIcon(IconHelper.newQueryIcon);
         fileMenu.add(newQuery);
 
         executeQueryItem = new JMenuItem("Execute Query");
         executeQueryItem.addActionListener(this);
+        executeQueryItem.setIcon(IconHelper.executeQueryIcon);
         fileMenu.add(executeQueryItem);
 
         openQueryItem = new JMenuItem("Open Query");
         openQueryItem.addActionListener(this);
+        openQueryItem.setIcon(IconHelper.openFileIcon);
         fileMenu.add(openQueryItem);
 
         saveQueryItem = new JMenuItem("Save Query");
         saveQueryItem.addActionListener(this);
+        saveQueryItem.setIcon(IconHelper.saveQueryIcon);
         fileMenu.add(saveQueryItem);
 
         settings = new JMenu("Settings");
 
         preferencesItem = new JMenuItem("Preferences");
+        preferencesItem.setIcon(IconHelper.settingsIcon);
         settings.add(preferencesItem);
 
         menuBar.add(mainMenu);
@@ -122,6 +139,7 @@ public class JDBC implements ActionListener {
         menuBar.add(settings);
 
         frame.setJMenuBar(menuBar);
+        frame.setIconImage(IconHelper.magnifyingImage);
     }
 
     private DefaultMutableTreeNode createTreeNodes() {
@@ -176,22 +194,31 @@ public class JDBC implements ActionListener {
                 ArrayList<Pair<String, String>> pairs = query.getSchemaTables();
 
                 for (Pair<String, String> schemaTable : pairs) {
+                    String t=null;
+                    try {
+                        String schema = schemaTable.x;
+                        String table = schemaTable.y;
 
-                    String schema = schemaTable.x;
-                    String table = schemaTable.y;
+                        String localizedSchema = db + "." + schema;
+                        DefaultMutableTreeNode schemaNode = new DefaultMutableTreeNode(schema);
 
-                    String localizedSchema = db + "." + schema;
-                    DefaultMutableTreeNode schemaNode = new DefaultMutableTreeNode(schema);
+                        if (!schemaLookup.containsKey(localizedSchema)) {
+                            schemaLookup.put(localizedSchema, schemaNode);
+                            dbLookup.get(db).add(schemaNode);
+                        } else {
+                            schemaNode = schemaLookup.get(localizedSchema);
+                        }
 
-                    if (!schemaLookup.containsKey(localizedSchema)) {
-                        schemaLookup.put(localizedSchema, schemaNode);
-                        dbLookup.get(db).add(schemaNode);
-                    }else{
-                        schemaNode = schemaLookup.get(localizedSchema);
+                        DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(table);
+
+                        t = schema+","+table+","+localizedSchema+","+schemaNode;
+
+                        schemaNode.add(tableNode);
+                    }catch (Exception e){
+                        if (t!=null)
+                            System.out.println(t);
+                        e.printStackTrace();
                     }
-
-                    DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(table);
-                    schemaNode.add(tableNode);
                 }
 
                 frame.repaint();
@@ -205,8 +232,8 @@ public class JDBC implements ActionListener {
     /**
      * Creates a new Query based on
      */
-    public void createNewQuery(String sql){
-        QueryPanel queryPanel = new QueryPanel(frame, sql, QueryPanel.TABBED_PARENT);
+    public void createNewQuery(String sql, String db){
+        QueryPanel queryPanel = new QueryPanel(frame, sql, db, QueryPanel.TABBED_PARENT);
         queryPanels.add(queryPanel);
         tabbedPane.addTab("New Query "+ (++queryCounter), null, queryPanel, "unsaved");
         tabbedPane.setSelectedIndex(tabbedPane.getTabCount()-1);
@@ -249,7 +276,12 @@ public class JDBC implements ActionListener {
             return;
 
         String sql = getSql(selectedFile);
-        createNewQuery(sql);
+        String db = null;
+        if (sql.indexOf("USE") == 0){
+            db = sql.substring(4, sql.indexOf("\n"));
+            sql = sql.substring(sql.indexOf("\n")+1);
+        }
+        createNewQuery(sql, db);
         Constants.jdbc.tabbedPane.setTitleAt(Constants.jdbc.tabbedPane.getSelectedIndex(), name);
     }
 
@@ -274,7 +306,7 @@ public class JDBC implements ActionListener {
         Object source = e.getSource();
 
         if (source.equals(newQuery))
-            createNewQuery("");
+            createNewQuery("", null);
 
         if (source.equals(connectItem))
             reconnect();

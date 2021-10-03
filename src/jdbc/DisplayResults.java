@@ -170,22 +170,35 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
 
             totalWidth += width;
         }
-        return totalWidth;
+        Dimension size
+                = Toolkit.getDefaultToolkit().getScreenSize();
+
+        // width will store the width of the screen
+        int width = (int) (size.getWidth() * 0.90);
+
+        return Math.min(width, totalWidth);
     }
 
-    private void createSQLView(){
+    private void createSQLView(String db){
         JFrame sqlView = new JFrame();
         sqlView.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         sqlView.setPreferredSize(new Dimension(500, 300));
         sqlView.setResizable(true);
 
-        sqlView.getContentPane().add(new QueryPanel(sqlView, this.queryResults.getSql(), QueryPanel.JFRAME_PARENT));
+        String sql = trim(queryResults.getSql(), db);
+        sqlView.getContentPane().add(new QueryPanel(sqlView, sql, db, QueryPanel.JFRAME_PARENT));
 
         sqlView.pack();
         sqlView.setLocationRelativeTo(null);
         sqlView.setVisible(true);
 
         Shared.registerFrame(sqlView);
+    }
+
+    public String trim(String sql, String db) {
+        if (sql.indexOf("USE ") == 0 && sql.indexOf(db) == 4)
+            return sql.substring(db.length()+5);
+        return sql;
     }
 
     public String getColumnName(int col) {
@@ -210,7 +223,7 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(viewSQLItem)) {
-            createSQLView();
+            createSQLView(this.queryResults.getDB());
         }
     }
 }

@@ -38,8 +38,7 @@ public class TreeMouseListener implements MouseListener {
         if (nodes.length != 4)
             return;
 
-        String sql = selectAllSQL(nodes[1].toString(), nodes[2].toString(), nodes[3].toString());
-        Shared.executeQuery(sql, TreeMouseListener.class);
+        Shared.executeQuery(selectAllSQL(nodes[2], nodes[3]), nodes[1].toString(), TreeMouseListener.class);
     }
 
     private void singleRightClick(MouseEvent e) {
@@ -76,9 +75,7 @@ public class TreeMouseListener implements MouseListener {
 
     private void createQuery(TreeNode nodes[]) {
 
-        StringBuilder builder = new StringBuilder("USE ");
-        builder.append(nodes[1].toString());
-        builder.append("\n\n");
+        StringBuilder builder = new StringBuilder("\n");
 
         if (nodes.length >= 3) {
             builder.append("SELECT *\n");
@@ -92,7 +89,7 @@ public class TreeMouseListener implements MouseListener {
         }
 
         String sql = builder.toString();
-        Constants.jdbc.createNewQuery(sql);
+        Constants.jdbc.createNewQuery(sql, nodes[1].toString());
     }
 
     @Override
@@ -105,11 +102,8 @@ public class TreeMouseListener implements MouseListener {
     }
 
 
-    private String selectAllSQL(String db, String schema, String table) {
-        String sql = "USE " + db + "\n\n" +
-                     "SELECT *\n" +
-                     "FROM " + schema + ".[" + table + "]";
-        return sql;
+    private String selectAllSQL(Object schema, Object table) {
+        return "\nSELECT *\nFROM " + schema + ".[" + table + "]";
     }
 
     @Override

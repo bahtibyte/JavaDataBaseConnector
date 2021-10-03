@@ -28,14 +28,15 @@ public class Shared {
         Constants.activeFrames.add(frame);
     }
 
-    public static void executeQuery(String sql, Class<?> sender) {
+    public static void executeQuery(String sql, String db, Class<?> sender) {
         new Thread(() -> {
             try {
-                final long timeout = 1500;
+                final long timeout = 30000;
                 final long startTime = System.currentTimeMillis();
 
+                String toRun = "USE " + db +"\n" + sql;
                 Query query = new Query();
-                query.runCustomQuery(sql);
+                query.runCustomQuery(toRun);
 
                 long currentTime = System.currentTimeMillis();
                 while (currentTime - startTime < timeout) {
@@ -53,7 +54,10 @@ public class Shared {
                     Messages.error("Unable to complete Query.\n@"+sender.getSimpleName());
                 }
                 else {
-                    DisplayResults display = new DisplayResults(query.getResults());
+                    QueryResults results = query.getResults();
+                    results.setDB(db);
+
+                    DisplayResults display = new DisplayResults(results);
                 }
 
             } catch (Exception e) {
@@ -92,7 +96,7 @@ public class Shared {
         }
 
         File writeableFile = new File(selectedFile.getParentFile(), name);
-        writeTo(writeableFile, queryPanel.codeArea.getText());
+        writeTo(writeableFile, "USE "+queryPanel.getSelectedDB()+"\n"+queryPanel.codeArea.getText());
 
         if (queryPanel.parent == QueryPanel.TABBED_PARENT)
             Constants.jdbc.tabbedPane.setTitleAt(Constants.jdbc.tabbedPane.getSelectedIndex(), name);
