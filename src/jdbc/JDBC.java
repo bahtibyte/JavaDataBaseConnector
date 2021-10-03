@@ -5,6 +5,7 @@ import jdbc.helpers.IconHelper;
 import jdbc.helpers.Settings;
 import jdbc.helpers.Shared;
 import jdbc.listeners.TreeMouseListener;
+import jdbc.oop.CellRenderer;
 import jdbc.oop.Login;
 import jdbc.oop.Pair;
 
@@ -55,6 +56,8 @@ public class JDBC implements ActionListener {
 
         DefaultMutableTreeNode root = createTreeNodes();
         dbTree = new JTree(root);
+        dbTree.setCellRenderer(new CellRenderer());
+        dbTree.setRowHeight(18);
         dbTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         dbTree.addMouseListener(new TreeMouseListener(dbTree));
 
@@ -143,14 +146,15 @@ public class JDBC implements ActionListener {
     }
 
     private DefaultMutableTreeNode createTreeNodes() {
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode(this.login.getNickname());
+        Pair<String, Icon> value = new Pair<String, Icon>(this.login.getNickname(), IconHelper.serverIcon16);
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode(value);
 
         this.dbLookup = new HashMap<>();
         this.schemaLookup = new HashMap<>();
 
         /* For each user specified databases, fetch and display all available tables in the db */
         for (String db : this.login.getDatabases()) {
-            DefaultMutableTreeNode dbNode = new DefaultMutableTreeNode(db);
+            DefaultMutableTreeNode dbNode = new DefaultMutableTreeNode(new Pair<String, Icon>(db, IconHelper.dbIcon16));
             dbLookup.put(db, dbNode);
             root.add(dbNode);
 
@@ -200,7 +204,8 @@ public class JDBC implements ActionListener {
                         String table = schemaTable.y;
 
                         String localizedSchema = db + "." + schema;
-                        DefaultMutableTreeNode schemaNode = new DefaultMutableTreeNode(schema);
+                        Pair<String, Icon> schemaPair = new Pair<String, Icon>(schema, IconHelper.schemaIcon);
+                        DefaultMutableTreeNode schemaNode = new DefaultMutableTreeNode(schemaPair);
 
                         if (!schemaLookup.containsKey(localizedSchema)) {
                             schemaLookup.put(localizedSchema, schemaNode);
@@ -209,7 +214,8 @@ public class JDBC implements ActionListener {
                             schemaNode = schemaLookup.get(localizedSchema);
                         }
 
-                        DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(table);
+                        Pair<String, Icon> tablePair = new Pair<String, Icon>(table, IconHelper.tableIcon);
+                        DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(tablePair);
 
                         t = schema+","+table+","+localizedSchema+","+schemaNode;
 

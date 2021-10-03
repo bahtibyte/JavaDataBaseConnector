@@ -4,8 +4,6 @@ import jdbc.helpers.IconHelper;
 import jdbc.oop.Login;
 
 import javax.swing.*;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
-import java.awt.*;
 
 public class Driver {
 

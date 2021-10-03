@@ -75,7 +75,7 @@ public class Shared {
         if (selected == null || selected.length() == 0)
             selected = full.trim();
 
-        String sql = SqlFormatter.of(Dialect.TSql).format(selected, Settings.config);
+        String sql = SqlFormatter.of(Dialect.Redshift).format(selected, Settings.config);
 
         int start = full.indexOf(selected);
         int pos = prev == start ? prev : start;

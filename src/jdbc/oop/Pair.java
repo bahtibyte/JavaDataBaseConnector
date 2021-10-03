@@ -10,4 +10,7 @@ public class Pair<X, Y> {
         this.y = y;
     }
 
+    public String toString(){
+        return x.toString() + " " + y.toString();
+    }
 }

@@ -5,6 +5,7 @@ import com.github.vertical_blank.sqlformatter.core.FormatConfig;
 import com.github.vertical_blank.sqlformatter.languages.Dialect;
 import jdbc.QueryPanel;
 import jdbc.helpers.Constants;
+import jdbc.helpers.IconHelper;
 import jdbc.helpers.Settings;
 import jdbc.helpers.Shared;
 
@@ -40,20 +41,24 @@ public class CodeAreaMouseListener implements MouseListener, ActionListener {
 
         formatItem = new JMenuItem("Format");
         formatItem.addActionListener(this);
+        formatItem.setIcon(IconHelper.formatIcon);
         popup.add(formatItem);
 
         popup.addSeparator();
 
         pasteItem = new JMenuItem("Paste");
         pasteItem.addActionListener(this);
+        pasteItem.setIcon(IconHelper.pasteIcon);
         popup.add(pasteItem);
 
         copyItem = new JMenuItem("Copy");
         copyItem.addActionListener(this);
+        copyItem.setIcon(IconHelper.copyIcon);
         popup.add(copyItem);
 
         cutItem = new JMenuItem("Cut");
         cutItem.addActionListener(this);
+        cutItem.setIcon(IconHelper.cutIcon);
         popup.add(cutItem);
     }
 

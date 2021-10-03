@@ -1,7 +1,9 @@
 package jdbc.listeners;
 
 import jdbc.helpers.Constants;
+import jdbc.helpers.IconHelper;
 import jdbc.helpers.Shared;
+import jdbc.oop.Pair;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -38,7 +40,7 @@ public class TreeMouseListener implements MouseListener {
         if (nodes.length != 4)
             return;
 
-        Shared.executeQuery(selectAllSQL(nodes[2], nodes[3]), nodes[1].toString(), TreeMouseListener.class);
+        Shared.executeQuery(selectAllSQL(getValue(nodes[2]), getValue(nodes[3])), getValue(nodes[1]), TreeMouseListener.class);
     }
 
     private void singleRightClick(MouseEvent e) {
@@ -47,7 +49,7 @@ public class TreeMouseListener implements MouseListener {
 
         TreePath cell = tree.getPathForLocation(e.getX(), e.getY());
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) cell.getLastPathComponent();
-
+        System.out.println(node.getUserObject());
         TreeNode nodes[] = node.getPath();
 
         if (nodes.length == 1)
@@ -59,6 +61,7 @@ public class TreeMouseListener implements MouseListener {
 
         final JPopupMenu popup = new JPopupMenu("Edit");
         JMenuItem newQueryItem = new JMenuItem("New Query");
+        newQueryItem.setIcon(IconHelper.newQueryIcon);
         newQueryItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 self.createQuery(nodes);
@@ -80,16 +83,19 @@ public class TreeMouseListener implements MouseListener {
         if (nodes.length >= 3) {
             builder.append("SELECT *\n");
             builder.append("FROM ");
-            builder.append(nodes[2].toString());
+            builder.append(getValue(nodes[2]));
             builder.append(".[");
             if (nodes.length == 4) {
-                builder.append(nodes[3].toString());
+                builder.append(getValue(nodes[3]));
             }
             builder.append("]\n");
         }
-
         String sql = builder.toString();
-        Constants.jdbc.createNewQuery(sql, nodes[1].toString());
+        Constants.jdbc.createNewQuery(sql, getValue(nodes[1]));
+    }
+
+    private String getValue(TreeNode node) {
+        return ((Pair<String, Icon>) ((DefaultMutableTreeNode) node).getUserObject()).x;
     }
 
     @Override

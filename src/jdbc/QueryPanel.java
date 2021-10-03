@@ -17,7 +17,7 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
     public static final int TABBED_PARENT = 1;
     public static final int JFRAME_PARENT = 2;
 
-    private static final int fontSize = 16;
+    private static final int fontSize = 14;
     public static final Font font = new Font("Consolas", Font.PLAIN, fontSize);
 
     private JFrame parentFrame;

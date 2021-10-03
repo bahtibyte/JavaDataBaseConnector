@@ -67,9 +67,10 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
         int numRows = data.length > 25 ? 25 : data.length;
         int height = numRows  * 15 + 100;
 
-        frame = new JFrame();
+        frame = new JFrame("Results: "+queryResults.getDB());
         frame.setPreferredSize(new Dimension(width, height));
         frame.setJMenuBar(menuBar);
+        frame.setIconImage(IconHelper.tableImage);
         frame.setContentPane(panel);
 
         frame.pack();
@@ -86,30 +87,36 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
 
         openInExcelItem = new JMenuItem("Open in Excel");
         openInExcelItem.addActionListener(this);
+        openInExcelItem.setIcon(IconHelper.openExcelIcon);
         exportMenu.add(openInExcelItem);
 
         exportAllItem = new JMenuItem("Export All");
         exportAllItem.addActionListener(this);
+        exportAllItem.setIcon(IconHelper.exportAllIcon);
         exportMenu.add(exportAllItem);
 
         exportSelectedItem = new JMenuItem("Export Selected");
         exportSelectedItem.addActionListener(this);
+        exportSelectedItem.setIcon(IconHelper.exportSelIcon);
         exportMenu.add(exportSelectedItem);
 
         viewMenu = new JMenu("View");
 
         viewSQLItem = new JMenuItem("View SQL");
         viewSQLItem.addActionListener(this);
+        viewSQLItem.setIcon(IconHelper.viewIcon);
         viewMenu.add(viewSQLItem);
 
         filterItem = new JMenuItem("Filter");
         filterItem.addActionListener(this);
+        filterItem.setIcon(IconHelper.filterIcon);
         viewMenu.add(filterItem);
 
         settingsMenu = new JMenu("Settings");
 
         preferencesItem = new JMenuItem("Preferences");
         preferencesItem.addActionListener(this);
+        preferencesItem.setIcon(IconHelper.settingsIcon);
         settingsMenu.add(preferencesItem);
 
         menuBar.add(exportMenu);
@@ -180,10 +187,11 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
     }
 
     private void createSQLView(String db){
-        JFrame sqlView = new JFrame();
+        JFrame sqlView = new JFrame("Query Editor Pop-Up");
         sqlView.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         sqlView.setPreferredSize(new Dimension(500, 300));
         sqlView.setResizable(true);
+        sqlView.setIconImage(IconHelper.queryEditorImage);
 
         String sql = trim(queryResults.getSql(), db);
         sqlView.getContentPane().add(new QueryPanel(sqlView, sql, db, QueryPanel.JFRAME_PARENT));
@@ -199,6 +207,10 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
         if (sql.indexOf("USE ") == 0 && sql.indexOf(db) == 4)
             return sql.substring(db.length()+5);
         return sql;
+    }
+
+    public void exportSelected() {
+        System.out.println("SHOULD EXPORT SELECTED");
     }
 
     public String getColumnName(int col) {
@@ -224,6 +236,9 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(viewSQLItem)) {
             createSQLView(this.queryResults.getDB());
+        }
+        if (e.getSource().equals(exportSelectedItem)){
+            exportSelected();
         }
     }
 }

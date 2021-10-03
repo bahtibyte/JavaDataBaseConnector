@@ -1,6 +1,7 @@
 package jdbc;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+import jdbc.helpers.IconHelper;
 import jdbc.helpers.Settings;
 import net.miginfocom.swing.MigLayout;
 import jdbc.oop.Login;
@@ -235,7 +236,7 @@ public class Validation implements ActionListener, KeyListener {
 
         menuBar.add(menu);
         frame.setJMenuBar(menuBar);
-
+        frame.setIconImage(IconHelper.magnifyingImage);
         frame.getContentPane().add(panel);
 
         frame.pack();
