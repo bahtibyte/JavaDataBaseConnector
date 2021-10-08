@@ -7,10 +7,7 @@ import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
 
 public class DisplayResults extends AbstractTableModel implements ActionListener {
 
@@ -67,7 +64,7 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
         int numRows = data.length > 25 ? 25 : data.length;
         int height = numRows  * 15 + 100;
 
-        frame = new JFrame("Results: "+queryResults.getDB());
+        frame = new JFrame("Results: "+queryResults.getDB() + " ~ " + extractTable());
         frame.setPreferredSize(new Dimension(width, height));
         frame.setJMenuBar(menuBar);
         frame.setIconImage(IconHelper.tableImage);
@@ -143,6 +140,7 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
 
         lastCol = col;
 
+
         Comparator sorter = new Sorter(col);
         if (colSort[col] == 1)
             sorter = sorter.reversed();
@@ -154,6 +152,19 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
 
         for (int i = 0; i < data.length; i++)
            data[i] = pq.remove();
+    }
+
+    public String extractTable() {
+        try {
+            for (String str : queryResults.getSql().split("\n")) {
+                if (str.toLowerCase().contains("from")) {
+                    return str.substring(5);
+                }
+            }
+            return "Unknown Table";
+        }catch(Exception e){
+            return "Exception";
+        }
     }
 
     /**
@@ -182,7 +193,7 @@ public class DisplayResults extends AbstractTableModel implements ActionListener
 
         // width will store the width of the screen
         int width = (int) (size.getWidth() * 0.90);
-
+        width = Math.max(200, width);
         return Math.min(width, totalWidth);
     }
 

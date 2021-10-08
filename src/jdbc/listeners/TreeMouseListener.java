@@ -84,11 +84,11 @@ public class TreeMouseListener implements MouseListener {
             builder.append("SELECT *\n");
             builder.append("FROM ");
             builder.append(getValue(nodes[2]));
-            builder.append(".[");
+            builder.append(".\"");
             if (nodes.length == 4) {
                 builder.append(getValue(nodes[3]));
             }
-            builder.append("]\n");
+            builder.append("\"\n");
         }
         String sql = builder.toString();
         Constants.jdbc.createNewQuery(sql, getValue(nodes[1]));

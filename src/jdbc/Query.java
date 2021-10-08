@@ -56,6 +56,7 @@ public class Query {
                 String[] types = {"TABLE"};
 
                 ResultSet resultSet = metaData.getTables(null, null, "%", types);
+
                 schemaTables = extractTables(resultSet);
 
             } catch (Exception e) {
@@ -92,6 +93,7 @@ public class Query {
                 Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
                 ResultSet resultSet = statement.executeQuery(sql);
+
                 queryResults = extractResults(resultSet, sql);
                 Constants.queries.add(sql);
 

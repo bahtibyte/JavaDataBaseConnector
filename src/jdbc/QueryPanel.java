@@ -43,7 +43,7 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
         this.parentFrame  = parentFrame;
 
         topRow = new JPanel(new MigLayout("", "[center, grow]"));
-        topRow.setBackground(Color.WHITE);
+        //topRow.setBackground(Color.WHITE);
 
         useLabel = new JLabel("USE Database:");
         useLabel.setFont(font);
@@ -73,14 +73,14 @@ public class QueryPanel extends JPanel implements KeyListener, ActionListener {
         updateNumberLine();
 
         textPanel = new JPanel(new MigLayout());
-        textPanel.setBackground(Color.WHITE);
+        //textPanel.setBackground(Color.WHITE);
         textPanel.add(numberLine, "grow, pushy");
         textPanel.add(codeArea, "grow, pushx");
 
         add(new JScrollPane(textPanel), "grow, pushy");
 
         botRow = new JPanel(new MigLayout("", "[center, grow]"));
-        botRow.setBackground(Color.WHITE);
+        //botRow.setBackground(Color.WHITE);
 
         executeButton = new JButton("Execute");
         executeButton.addActionListener(this);

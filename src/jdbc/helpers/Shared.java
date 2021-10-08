@@ -75,7 +75,10 @@ public class Shared {
         if (selected == null || selected.length() == 0)
             selected = full.trim();
 
-        String sql = SqlFormatter.of(Dialect.Redshift).format(selected, Settings.config);
+        String fixed = selected.replaceAll("\\[","\"").replaceAll("\\]","\"");
+        System.out.println(fixed);
+
+        String sql = SqlFormatter.of(Dialect.Redshift).format(fixed, Settings.config);
 
         int start = full.indexOf(selected);
         int pos = prev == start ? prev : start;
